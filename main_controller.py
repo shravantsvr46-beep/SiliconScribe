@@ -3,24 +3,44 @@ import knowledge_manager
 import ai_engine
 
 
-def generate_embedded_solution(user_input, api_key):
+def generate_embedded_solution(user_input):
+    """
+    Main pipeline controller for SiliconScribe
+    """
 
-    # Step 1: Parse the user request
-    intent = parser.parse_user_intent(user_input, api_key)
+    try:
 
-    # Step 2: Get datasheet context
-    context = knowledge_manager.get_datasheet_context(
-        intent["mcu"],
-        user_input,
-        api_key
-    )
+        # Step 1 — Parse the user request
+        intent = parser.parse_user_intent(user_input)
 
-    # Step 3: Generate AI response
-    answer = ai_engine.get_ai_response(
-        user_input,
-        intent["mcu"],
-        context,
-        api_key
-    )
+        mcu = intent.get("mcu", "Unknown")
 
-    return answer, intent
+        # Step 2 — Retrieve datasheet context
+        context = knowledge_manager.get_datasheet_context(
+            mcu,
+            user_input
+        )
+
+        # Step 3 — Generate AI embedded solution
+        answer = ai_engine.get_ai_response(
+            user_input,
+            mcu,
+            context
+        )
+
+        return answer, intent
+
+    except Exception as e:
+
+        return f"""
+⚠️ Internal processing error
+
+Details:
+{str(e)}
+
+Possible causes:
+• GROQ API issue
+• Invalid GROQ_API_KEY in .env
+• Datasheet not found
+• Internet connection issue
+""", {}

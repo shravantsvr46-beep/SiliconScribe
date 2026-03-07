@@ -1,0 +1,20 @@
+{
+  "name": "STM32F103",
+  "type": "microcontroller",
+  "manufacturer": "STMicroelectronics",
+  "core": "ARM Cortex-M3",
+  "interfaces": [
+    "GPIO",
+    "UART",
+    "SPI",
+    "I2C",
+    "PWM",
+    "ADC",
+    "DMA"
+  ],
+  "keywords": [
+    "stm32f103",
+    "stm32",
+    "blue pill"
+  ]
+}

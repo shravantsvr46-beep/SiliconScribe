@@ -1,0 +1,11 @@
+{
+  "name": "IR Receiver",
+  "type": "peripheral",
+  "category": "infrared_sensor",
+  "interfaces": ["GPIO"],
+  "keywords": [
+    "ir receiver",
+    "infrared sensor",
+    "vs1838b"
+  ]
+}

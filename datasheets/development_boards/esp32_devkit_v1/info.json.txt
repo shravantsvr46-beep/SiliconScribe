@@ -1,0 +1,11 @@
+{
+  "name": "ESP32 DevKit V1",
+  "type": "development_board",
+  "microcontroller": "ESP32",
+  "interfaces": ["GPIO", "UART", "SPI", "I2C", "PWM", "ADC"],
+  "keywords": [
+    "esp32 devkit",
+    "esp32 devkit v1",
+    "esp32 board"
+  ]
+}

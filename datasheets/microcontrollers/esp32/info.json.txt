@@ -1,0 +1,19 @@
+{
+  "name": "ESP32",
+  "type": "microcontroller",
+  "manufacturer": "Espressif",
+  "interfaces": [
+    "GPIO",
+    "UART",
+    "SPI",
+    "I2C",
+    "PWM",
+    "ADC",
+    "DAC"
+  ],
+  "keywords": [
+    "esp32",
+    "esp32 microcontroller",
+    "esp32 chip"
+  ]
+}

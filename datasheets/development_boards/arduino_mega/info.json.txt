@@ -1,0 +1,18 @@
+{
+  "name": "Arduino Mega 2560",
+  "type": "development_board",
+  "microcontroller": "ATmega2560",
+  "interfaces": [
+    "GPIO",
+    "UART",
+    "SPI",
+    "I2C",
+    "PWM",
+    "ADC"
+  ],
+  "keywords": [
+    "arduino mega",
+    "arduino mega 2560",
+    "mega 2560"
+  ]
+}

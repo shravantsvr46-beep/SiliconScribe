@@ -1,0 +1,17 @@
+{
+  "name": "Arduino Nano",
+  "type": "development_board",
+  "microcontroller": "ATmega328P",
+  "interfaces": [
+    "GPIO",
+    "UART",
+    "SPI",
+    "I2C",
+    "PWM",
+    "ADC"
+  ],
+  "keywords": [
+    "arduino nano",
+    "nano board"
+  ]
+}

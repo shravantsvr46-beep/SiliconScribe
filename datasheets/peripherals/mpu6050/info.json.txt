@@ -1,0 +1,11 @@
+{
+  "name": "MPU6050",
+  "type": "peripheral",
+  "category": "imu_sensor",
+  "interfaces": ["I2C"],
+  "keywords": [
+    "mpu6050",
+    "gyro sensor",
+    "accelerometer"
+  ]
+}

@@ -1,99 +1,177 @@
 import streamlit as st
+import main_controller
+import re
 
-# Page configuration
+# ---------- PAGE CONFIG ----------
 st.set_page_config(
     page_title="SiliconScribe",
     page_icon="🧠",
     layout="wide"
 )
 
-st.title("🧠 SiliconScribe")
-st.subheader("AI Firmware Generator & Debug Assistant")
+# ---------- SESSION STORAGE ----------
+if "chat_sessions" not in st.session_state:
+    st.session_state.chat_sessions = {"New Chat": []}
 
-# Initialize session state
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if "current_chat" not in st.session_state:
+    st.session_state.current_chat = "New Chat"
 
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+if "show_code" not in st.session_state:
+    st.session_state.show_code = True
 
-# Sidebar
-st.sidebar.title("Session Controls")
 
-if st.sidebar.button("New Chat"):
-    st.session_state.messages = []
+# ---------- SIDEBAR ----------
+st.sidebar.title("💬 Chats")
 
-st.sidebar.markdown("### Chat History")
-for i in range(len(st.session_state.chat_history)):
-    st.sidebar.write(f"Chat {i+1}")
+if st.sidebar.button("➕ New Chat"):
+    st.session_state.chat_sessions["New Chat"] = []
+    st.session_state.current_chat = "New Chat"
+    st.rerun()
 
-st.sidebar.markdown("### Example Prompts")
-st.sidebar.code(
-"""Generate STM32F446RE driver for BMP280 using I2C
-ESP32 UART communication for GPS module
-Arduino PWM motor control using timer"""
-)
+st.sidebar.markdown("---")
 
-# Display chat
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+for chat_name in list(st.session_state.chat_sessions.keys()):
 
-# Chat input
-prompt = st.chat_input("Describe firmware request or ask debugging help")
+    col1, col2 = st.sidebar.columns([4,1])
 
-if prompt:
+    if col1.button(chat_name, key=f"open_{chat_name}"):
+        st.session_state.current_chat = chat_name
+        st.rerun()
 
-    st.session_state.messages.append({
+    if col2.button("❌", key=f"delete_{chat_name}"):
+
+        del st.session_state.chat_sessions[chat_name]
+
+        if len(st.session_state.chat_sessions) == 0:
+            st.session_state.chat_sessions["New Chat"] = []
+
+        st.session_state.current_chat = list(st.session_state.chat_sessions.keys())[0]
+
+        st.rerun()
+
+
+messages = st.session_state.chat_sessions[st.session_state.current_chat]
+
+
+# ---------- HEADER ----------
+if len(messages) == 0:
+
+    col1, col2, col3 = st.columns([1,2,1])
+
+    with col2:
+        st.markdown(
+            "<h1 style='text-align:center;'>🧠 SiliconScribe</h1>",
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            "<p style='text-align:center;'>AI Assistant for Embedded Systems</p>",
+            unsafe_allow_html=True
+        )
+
+else:
+
+    st.markdown("# 🧠 SiliconScribe")
+    st.caption("AI Assistant for Embedded Systems")
+
+st.markdown("---")
+
+
+# ---------- DISPLAY CHAT ----------
+for i, msg in enumerate(messages):
+
+    if msg["role"] == "user":
+        st.chat_message("user").write(msg["content"])
+
+    if msg["role"] == "assistant":
+
+        clean_text = re.sub(r"```.*?```", "", msg["explanation"], flags=re.DOTALL)
+
+        if msg["code"] and st.session_state.show_code:
+            col_left, col_right = st.columns([2,1])
+        else:
+            col_left, col_right = st.columns([1,0.01])
+
+        with col_left:
+            st.chat_message("assistant").markdown(clean_text)
+
+        if msg["code"] and st.session_state.show_code:
+
+            with col_right:
+
+                st.markdown("### 💻 Code")
+
+                st.code(msg["code"], language="c")
+
+                st.download_button(
+                    label="📋 Copy / Download Code",
+                    data=msg["code"],
+                    file_name="embedded_code.c",
+                    mime="text/plain",
+                    key=f"copy_{i}_{st.session_state.current_chat}"
+                )
+
+
+# ---------- TOGGLE CODE PANEL ----------
+if any(m.get("code") for m in messages):
+
+    col1, col2 = st.columns([6,1])
+
+    with col2:
+        if st.button("Toggle Code Panel"):
+            st.session_state.show_code = not st.session_state.show_code
+            st.rerun()
+
+
+# ---------- USER INPUT ----------
+if len(messages) == 0:
+
+    col1, col2, col3 = st.columns([1,2,1])
+
+    with col2:
+        user_input = st.chat_input("Ask an embedded systems question...")
+
+else:
+
+    user_input = st.chat_input("Ask an embedded systems question...")
+
+
+if user_input:
+
+    st.chat_message("user").write(user_input)
+
+    messages.append({
         "role": "user",
-        "content": prompt
+        "content": user_input
     })
 
-    with st.chat_message("user"):
-        st.write(prompt)
+    # Rename chat based on first prompt
+    if st.session_state.current_chat == "New Chat":
 
-    # Build response safely
-    response = (
-        "### Parsed Hardware\n"
-        "MCU: STM32F446RE\n"
-        "Sensor: BMP280\n"
-        "Protocol: I2C\n\n"
-        "---\n\n"
-        "### Generated Firmware\n\n"
-        "```c\n"
-        "#include \"stm32f4xx.h\"\n\n"
-        "void I2C_Init() {\n"
-        "    // Initialize I2C peripheral\n"
-        "}\n\n"
-        "void BMP280_Init() {\n"
-        "    // Initialize BMP280 sensor\n"
-        "}\n\n"
-        "int main() {\n"
-        "    I2C_Init();\n"
-        "    BMP280_Init();\n\n"
-        "    while(1) {\n"
-        "        // Read sensor data\n"
-        "    }\n"
-        "}\n"
-        "```\n\n"
-        "---\n\n"
-        "### Hardware Setup\n"
-        "BMP280 → STM32F446RE\n"
-        "VCC → 3.3V\n"
-        "GND → GND\n"
-        "SDA → PB7\n"
-        "SCL → PB6\n\n"
-        "---\n\n"
-        "### Debug Tips\n"
-        "- Check I2C pull-up resistors\n"
-        "- Verify SDA/SCL pins\n"
-        "- Confirm correct clock configuration\n"
-    )
+        title = " ".join(user_input.split()[:4])
 
-    st.session_state.messages.append({
+        st.session_state.chat_sessions[title] = st.session_state.chat_sessions.pop("New Chat")
+
+        st.session_state.current_chat = title
+
+        messages = st.session_state.chat_sessions[title]
+
+    # Generate AI response
+    with st.spinner("Analyzing datasheets..."):
+
+        answer, intent = main_controller.generate_embedded_solution(user_input)
+
+    code_match = re.search(r"```(.*?)```", answer, re.DOTALL)
+
+    code = None
+
+    if code_match:
+        code = code_match.group(1).strip()
+
+    messages.append({
         "role": "assistant",
-        "content": response
+        "explanation": answer,
+        "code": code
     })
 
-    with st.chat_message("assistant"):
-        st.markdown(response)
+    st.rerun()

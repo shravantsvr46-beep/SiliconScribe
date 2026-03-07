@@ -1,63 +1,75 @@
-import google.generativeai as genai
+from groq import Groq
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+
+# Initialize Groq client
+client = Groq(
+    api_key=os.getenv("GROQ_API_KEY")
+)
 
 
-def get_ai_response(user_input, mcu, context, api_key):
-    genai.configure(api_key=api_key)
-
-    model = genai.GenerativeModel("gemini-2.5-flash")
+def get_ai_response(user_input, mcu, context):
+    """
+    Generates an embedded systems solution using Groq LLM
+    with RAG datasheet context.
+    """
 
     prompt = f"""
-You are an Expert Embedded Systems Engineer helping design microcontroller circuits.
+You are an expert embedded systems engineer.
 
-Context extracted from datasheet:
-{context}
+Your task is to help developers design embedded systems using
+correct information from datasheets.
 
 User Request:
 {user_input}
 
-Target MCU:
+Microcontroller / Board:
 {mcu}
 
-Your task is to generate a COMPLETE embedded solution.
+Relevant Datasheet Information:
+{context}
 
-STRICT RULES:
+Instructions:
 
-1. Detect all components mentioned in the request.
+1. Use the datasheet information above to answer the question.
+2. If the request is impossible (wrong protocol, incompatible hardware),
+   explain why and suggest an alternative solution.
+3. Provide correct pin usage and interfaces.
+4. Provide working embedded C / Arduino style code if needed.
 
-2. ALWAYS generate a COMPLETE PINOUT TABLE using this format:
+Output Format:
 
-| Component | Pin Name | Connects To | MCU Pin | Description |
+Explanation:
+Explain the solution clearly.
 
-3. Choose SAFE pins for the MCU.
-Avoid:
-- ESP32 boot pins
-- ADC2 pins when WiFi may be used
-- restricted pins
+Pins / Interfaces:
+List the relevant pins or communication interfaces.
 
-4. After the pinout table provide:
-
-### Connection Summary
-Example:
-Sensor VCC → ESP32 3.3V
-Sensor GND → ESP32 GND
-
-5. After that generate CLEAN AND COMMENTED firmware code.
-
-Requirements:
-- Arduino IDE compatible
-- Complete and compilable
-- Well commented
-
-6. Explain briefly how the circuit works.
-
-Output format:
-
-Pinout Table  
-Connection Summary  
-Firmware Code  
-Explanation
+Example Code:
+Provide the working code inside triple backticks.
 """
 
-    response = model.generate_content(prompt)
+    try:
 
-    return response.text
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert embedded systems assistant that uses datasheet information."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0
+        )
+
+        return response.choices[0].message.content
+
+    except Exception as e:
+        return f"AI model error: {str(e)}"

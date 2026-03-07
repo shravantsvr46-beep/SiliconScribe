@@ -1,0 +1,11 @@
+{
+  "name": "SX1278 LoRa",
+  "type": "peripheral",
+  "category": "wireless_module",
+  "interfaces": ["SPI"],
+  "keywords": [
+    "lora",
+    "sx1278",
+    "rfm95"
+  ]
+}

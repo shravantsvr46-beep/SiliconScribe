@@ -1,0 +1,11 @@
+{
+  "name": "SSD1306 OLED",
+  "type": "peripheral",
+  "category": "display",
+  "interfaces": ["I2C", "SPI"],
+  "keywords": [
+    "oled",
+    "ssd1306",
+    "oled display"
+  ]
+}
