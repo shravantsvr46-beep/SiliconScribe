@@ -1,109 +1,99 @@
 import streamlit as st
 
-# Page setup
+# Page configuration
 st.set_page_config(
     page_title="SiliconScribe",
     page_icon="🧠",
     layout="wide"
 )
 
-# Header
-st.markdown("""
-# 🧠 SiliconScribe
-### AI-Powered Embedded Firmware Generator
-""")
+st.title("🧠 SiliconScribe")
+st.subheader("AI Firmware Generator & Debug Assistant")
 
-st.write(
-"Describe your hardware setup and SiliconScribe will generate firmware code, wiring instructions and compilation steps."
-)
+# Initialize session state
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# Example prompts
-st.markdown("### Example Prompts")
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-st.code(
+# Sidebar
+st.sidebar.title("Session Controls")
+
+if st.sidebar.button("New Chat"):
+    st.session_state.messages = []
+
+st.sidebar.markdown("### Chat History")
+for i in range(len(st.session_state.chat_history)):
+    st.sidebar.write(f"Chat {i+1}")
+
+st.sidebar.markdown("### Example Prompts")
+st.sidebar.code(
 """Generate STM32F446RE driver for BMP280 using I2C
 ESP32 UART communication for GPS module
 Arduino PWM motor control using timer"""
 )
 
-# Prompt input
-st.markdown("### Firmware Request")
+# Display chat
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-prompt = st.text_area(
-    "Enter your firmware request",
-    placeholder="Example: Generate STM32F446RE driver for BMP280 using I2C",
-    height=120
-)
+# Chat input
+prompt = st.chat_input("Describe firmware request or ask debugging help")
 
-# Generate button
-if st.button("Generate Firmware"):
+if prompt:
 
-    st.success("Processing request...")
+    st.session_state.messages.append({
+        "role": "user",
+        "content": prompt
+    })
 
-    # Pipeline
-    st.markdown("### Processing Pipeline")
-    st.write("Prompt → Parsing → Firmware Generation → Documentation")
+    with st.chat_message("user"):
+        st.write(prompt)
 
-    # Parsed hardware spec
-    st.markdown("### Parsed Hardware Specification")
-
-    col1, col2, col3 = st.columns(3)
-
-    col1.info("MCU: STM32F446RE")
-    col2.info("Sensor: BMP280")
-    col3.info("Protocol: I2C")
-
-    # Tabs for outputs
-    tab1, tab2, tab3 = st.tabs(
-        ["Firmware Code", "Hardware Setup", "Flash Instructions"]
+    # Build response safely
+    response = (
+        "### Parsed Hardware\n"
+        "MCU: STM32F446RE\n"
+        "Sensor: BMP280\n"
+        "Protocol: I2C\n\n"
+        "---\n\n"
+        "### Generated Firmware\n\n"
+        "```c\n"
+        "#include \"stm32f4xx.h\"\n\n"
+        "void I2C_Init() {\n"
+        "    // Initialize I2C peripheral\n"
+        "}\n\n"
+        "void BMP280_Init() {\n"
+        "    // Initialize BMP280 sensor\n"
+        "}\n\n"
+        "int main() {\n"
+        "    I2C_Init();\n"
+        "    BMP280_Init();\n\n"
+        "    while(1) {\n"
+        "        // Read sensor data\n"
+        "    }\n"
+        "}\n"
+        "```\n\n"
+        "---\n\n"
+        "### Hardware Setup\n"
+        "BMP280 → STM32F446RE\n"
+        "VCC → 3.3V\n"
+        "GND → GND\n"
+        "SDA → PB7\n"
+        "SCL → PB6\n\n"
+        "---\n\n"
+        "### Debug Tips\n"
+        "- Check I2C pull-up resistors\n"
+        "- Verify SDA/SCL pins\n"
+        "- Confirm correct clock configuration\n"
     )
 
-    with tab1:
-        code = """
-#include "stm32f4xx.h"
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": response
+    })
 
-void I2C_Init() {
-    // Initialize I2C peripheral
-}
-
-void BMP280_Init() {
-    // Initialize BMP280 sensor
-}
-
-int main() {
-
-    I2C_Init();
-    BMP280_Init();
-
-    while(1) {
-        // Read sensor data
-    }
-}
-"""
-        st.code(code, language="c")
-
-        st.download_button(
-            "Download Firmware",
-            data=code,
-            file_name="siliconscribe_driver.c",
-            mime="text/plain"
-        )
-
-    with tab2:
-        st.write("""
-BMP280 → STM32F446RE
-
-VCC → 3.3V  
-GND → GND  
-SDA → PB7  
-SCL → PB6
-""")
-
-    with tab3:
-        st.write("""
-1. Open STM32CubeIDE  
-2. Create project for STM32F446RE  
-3. Add generated firmware  
-4. Build project  
-5. Flash using ST-Link
-""")
+    with st.chat_message("assistant"):
+        st.markdown(response)
