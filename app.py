@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import main_controller
 import re
 
@@ -156,6 +157,9 @@ if user_input:
 
         messages = st.session_state.chat_sessions[title]
 
+    # ---------- SCROLL ANCHOR ----------
+    st.markdown("<div id='response-anchor'></div>", unsafe_allow_html=True)
+
     # Generate AI response
     with st.spinner("Analyzing datasheets..."):
 
@@ -175,3 +179,20 @@ if user_input:
     })
 
     st.rerun()
+
+
+# ---------- AUTO SCROLL TO RESPONSE ----------
+components.html(
+    """
+    <script>
+        const scrollToResponse = () => {
+            const anchor = parent.document.getElementById("response-anchor");
+            if(anchor){
+                anchor.scrollIntoView({behavior: "smooth", block: "start"});
+            }
+        };
+        setTimeout(scrollToResponse, 300);
+    </script>
+    """,
+    height=0
+)
