@@ -5,10 +5,3 @@ SiliconScribe is an **AI-powered assistant for embedded systems development** th
 It combines **Retrieval-Augmented Generation (RAG)** with large language models to produce **accurate explanations, pin mappings, and example code**.
 
 ---
-
-# 🚀 Features
-
-### 💬 AI Chat Interface
-Ask embedded systems questions naturally.
-
-Example:
