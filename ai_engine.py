@@ -1,75 +1,50 @@
 from groq import Groq
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
-# Initialize Groq client
-client = Groq(
-    api_key=os.getenv("GROQ_API_KEY")
-)
+def generate_firmware(prompt, intent, context):
 
+    api_key = os.getenv("GROQ_API_KEY")
 
-def get_ai_response(user_input, mcu, context):
-    """
-    Generates an embedded systems solution using Groq LLM
-    with RAG datasheet context.
-    """
+    client = Groq(api_key=api_key)
 
-    prompt = f"""
-You are an expert embedded systems engineer.
+    mcu = intent["mcu"]
 
-Your task is to help developers design embedded systems using
-correct information from datasheets.
+    system_prompt = f"""
+You are a senior embedded systems engineer.
 
 User Request:
-{user_input}
+{prompt}
 
-Microcontroller / Board:
+Detected MCU:
 {mcu}
 
-Relevant Datasheet Information:
+Additional technical context:
 {context}
 
-Instructions:
+Generate a professional embedded firmware solution.
 
-1. Use the datasheet information above to answer the question.
-2. If the request is impossible (wrong protocol, incompatible hardware),
-   explain why and suggest an alternative solution.
-3. Provide correct pin usage and interfaces.
-4. Provide working embedded C / Arduino style code if needed.
+Structure:
 
-Output Format:
-
-Explanation:
-Explain the solution clearly.
-
-Pins / Interfaces:
-List the relevant pins or communication interfaces.
-
-Example Code:
-Provide the working code inside triple backticks.
+Parsed Components
+Physical Feasibility Verdict
+Pinout Table
+Connection Summary
+Firmware Code
+Engineering Review
+Recommended Solution
 """
 
-    try:
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": "You are an expert embedded firmware engineer."},
+            {"role": "user", "content": system_prompt}
+        ],
+        temperature=0.2,
+        max_tokens=1500
+    )
 
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are an expert embedded systems assistant that uses datasheet information."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0
-        )
-
-        return response.choices[0].message.content
-
-    except Exception as e:
-        return f"AI model error: {str(e)}"
+    return response.choices[0].message.content

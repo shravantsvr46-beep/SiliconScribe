@@ -1,0 +1,5 @@
+better prompt from ai
+steps involved printing 
+RAG
+N8N
+resistors

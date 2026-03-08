@@ -1,53 +1,62 @@
-import os
-import json
-from groq import Groq
-from dotenv import load_dotenv
+MCU_LIST = [
+    "esp32",
+    "esp8266",
+    "arduino",
+    "stm32",
+    "raspberry pi pico",
+    "pico",
+    "atmega328"
+]
 
-# Load environment variables
-load_dotenv()
+SENSOR_LIST = [
+    "mpu6050",
+    "bmp280",
+    "dht11",
+    "dht22",
+    "ultrasonic",
+    "ir sensor",
+    "gps",
+    "oled",
+    "lcd",
+    "motor",
+    "servo",
+    "relay"
+]
 
-# Initialize Groq client
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
+def parse_prompt(prompt):
 
-def parse_user_intent(user_input):
+    prompt_lower = prompt.lower()
 
-    prompt = f"""
-You are an embedded systems assistant.
+    detected_mcu = "Generic MCU"
+    detected_sensor = "Unknown"
 
-Extract structured information from the following request.
+    for mcu in MCU_LIST:
+        if mcu in prompt_lower:
+            detected_mcu = mcu.upper()
+            break
 
-User Request:
-{user_input}
+    for sensor in SENSOR_LIST:
+        if sensor in prompt_lower:
+            detected_sensor = sensor.upper()
+            break
 
-Return ONLY valid JSON in this format:
-
-{{
-  "mcu": "",
-  "components": [],
-  "protocols": []
-}}
-"""
-
-    try:
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": "You extract structured embedded systems information."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0
-        )
-
-        result = response.choices[0].message.content
-
-        intent = json.loads(result)
-
-    except Exception:
-        intent = {
-            "mcu": "Unknown",
-            "components": [],
-            "protocols": []
-        }
+    intent = {
+        "mcu": detected_mcu,
+        "sensor": detected_sensor,
+        "raw_prompt": prompt
+    }
 
     return intent
+
+
+def format_intent(intent):
+
+    return f"""
+### 🔍 Parsed Hardware
+
+| Component | Detected |
+|----------|-----------|
+| MCU | {intent['mcu']} |
+| Peripheral | {intent['sensor']} |
+"""

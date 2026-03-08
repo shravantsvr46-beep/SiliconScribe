@@ -1,29 +1,22 @@
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
+import os
+from langchain_community.document_loaders import PyPDFLoader
 
 
-# Load embedding model
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
+def get_datasheet_context(mcu_name, query, api_key):
 
-# Load FAISS vector database
-db = FAISS.load_local(
-    "vector_store",
-    embeddings,
-    allow_dangerous_deserialization=True
-)
+    pdf_path = os.path.join("docs", f"{mcu_name.lower()}_manual.pdf")
 
+    if not os.path.exists(pdf_path):
+        return "No datasheet available. Use general microcontroller knowledge."
 
-def get_datasheet_context(mcu, user_input):
+    try:
 
-    query = f"{mcu} {user_input}"
+        loader = PyPDFLoader(pdf_path)
+        docs = loader.load()
 
-    docs = db.similarity_search(query, k=5)
+        context = "\n".join([doc.page_content for doc in docs[:3]])
 
-    context = ""
+        return context
 
-    for doc in docs:
-        context += doc.page_content + "\n"
-
-    return context
+    except Exception as e:
+        return f"Error reading datasheet: {e}"
